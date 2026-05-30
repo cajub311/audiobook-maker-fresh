@@ -4,11 +4,11 @@
   "private": true,
   "description": "Clean rebuild of a browser-based audiobook maker with a tiny Node TTS backend.",
   "engines": {
-    "node": ">=18.17"
+    "node": "22.x"
   },
   "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js",
+    "dev": "node scripts/dev-server.js",
+    "start": "node scripts/dev-server.js",
     "test": "node --test tests/*.js"
   },
   "dependencies": {

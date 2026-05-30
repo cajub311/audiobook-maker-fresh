@@ -1,6 +1,12 @@
 {
-  "version": 2,
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
   "rewrites": [
     { "source": "/", "destination": "/index.html" }
-  ]
+  ],
+  "functions": {
+    "api/tts.js": {
+      "maxDuration": 60
+    }
+  }
 }

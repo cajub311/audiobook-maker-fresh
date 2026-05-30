@@ -3,11 +3,11 @@
 const fs = require("fs");
 const http = require("http");
 const path = require("path");
-const handleHealth = require("./api/health");
-const handleVoices = require("./api/voices");
-const handleTts = require("./api/tts");
+const handleHealth = require("../api/health");
+const handleVoices = require("../api/voices");
+const handleTts = require("../api/tts");
 
-const ROOT = __dirname;
+const ROOT = path.resolve(__dirname, "..");
 const PUBLIC_DIR = path.join(ROOT, "public");
 const PORT = Number(process.env.PORT || 8010);
 const HOST = process.env.HOST || "127.0.0.1";
@@ -23,7 +23,7 @@ function json(res, statusCode, payload) {
 
 function contentType(filePath) {
   if (filePath.endsWith(".html")) return "text/html; charset=utf-8";
-  if (filePath.endsWith(".js")) return "application/javascript; charset=utf-8";
+  if (filePath.endsWith(".mjs") || filePath.endsWith(".js")) return "application/javascript; charset=utf-8";
   if (filePath.endsWith(".css")) return "text/css; charset=utf-8";
   if (filePath.endsWith(".json")) return "application/json; charset=utf-8";
   if (filePath.endsWith(".svg")) return "image/svg+xml";

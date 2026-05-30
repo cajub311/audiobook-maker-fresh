@@ -6,7 +6,7 @@ const { test } = require("node:test");
 
 process.env.ABM_FAKE_TTS = "1";
 
-const { server } = require("../server");
+const { server } = require("../scripts/dev-server");
 const { clampNumber, toProsodyPercent } = require("../api/tts");
 
 function listen() {
