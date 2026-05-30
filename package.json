@@ -1,0 +1,17 @@
+{
+  "name": "audiobook-maker-fresh",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Clean rebuild of a browser-based audiobook maker with a tiny Node TTS backend.",
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "test": "node --test tests/*.js"
+  },
+  "dependencies": {
+    "msedge-tts": "^2.0.5"
+  }
+}

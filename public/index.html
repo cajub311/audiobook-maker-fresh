@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Audiobook Maker Fresh</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Clean rebuild</p>
+          <h1>Audiobook Maker</h1>
+        </div>
+        <div id="health" class="status-pill">Starting</div>
+      </header>
+
+      <section class="workspace">
+        <div class="editor">
+          <label for="bookText">Text</label>
+          <textarea id="bookText" spellcheck="true">The rain tapped softly against the window. "Are we really leaving tonight?" Mara asked. Jonas took a breath, then nodded. "Before sunrise."</textarea>
+          <div class="meta">
+            <span id="charCount">0 characters</span>
+            <span id="chunkCount">0 chunks</span>
+          </div>
+          <label class="file-import" for="fileInput">Import .txt file</label>
+          <input id="fileInput" type="file" accept=".txt,text/plain" />
+        </div>
+
+        <aside class="controls">
+          <label for="voice">Voice</label>
+          <select id="voice"></select>
+
+          <label for="rate">Speed <span id="rateValue">0%</span></label>
+          <input id="rate" type="range" min="-50" max="50" value="0" />
+
+          <label for="pitch">Pitch <span id="pitchValue">0 Hz</span></label>
+          <input id="pitch" type="range" min="-30" max="30" value="0" />
+
+          <label for="chunkSize">Chunk size</label>
+          <input id="chunkSize" type="number" min="400" max="4500" step="100" value="1800" />
+
+          <button id="preview" class="secondary">Preview first chunk</button>
+          <button id="generate" class="primary">Generate audiobook</button>
+          <button id="stop" class="secondary" disabled>Stop</button>
+
+          <div class="progress">
+            <div id="bar"></div>
+          </div>
+          <p id="message" class="message">Ready.</p>
+        </aside>
+      </section>
+
+      <section class="output">
+        <audio id="player" controls></audio>
+        <a id="download" class="download" hidden download="audiobook.mp3">Download MP3</a>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
