@@ -161,56 +161,69 @@ async function synthesizeChunk(text, signal) {
       });
     }
 
-    const res = await fetch("/api/tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text,
-        voice: els.voice.value,
-        rate: Number(els.rate.value) / 100,
-        pitch: Number(els.pitch.value),
-        style: els.style.value,
-        expressiveness: Number(els.expressiveness.value) / 100,
-        format: els.format.value
-      }),
-      signal
-    });
-
-    if (res.ok) {
-      const blob = await res.blob();
-      if (!blob.size) throw new Error("TTS returned an empty audio file");
-      return blob;
-    }
-
-    let error = `TTS failed (${res.status})`;
     try {
-      const data = await res.json();
-      error = data.error || error;
-    } catch (_error) {}
-    lastError = new Error(error);
-    if (res.status < 500 && res.status !== 429) throw lastError;
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          voice: els.voice.value,
+          rate: Number(els.rate.value) / 100,
+          pitch: Number(els.pitch.value),
+          style: els.style.value,
+          expressiveness: Number(els.expressiveness.value) / 100,
+          format: els.format.value
+        }),
+        signal
+      });
+
+      if (res.ok) {
+        const blob = await res.blob();
+        if (!blob.size) throw new Error("TTS returned an empty audio file");
+        return blob;
+      }
+
+      let error = `TTS failed (${res.status})`;
+      try {
+        const data = await res.json();
+        error = data.error || error;
+      } catch (_error) {}
+      lastError = new Error(error);
+      if (res.status < 500 && res.status !== 429) throw lastError;
+    } catch (error) {
+      if (error.name === "AbortError") throw error;
+      lastError = error;
+    }
   }
 
   throw lastError || new Error("TTS failed");
 }
 
 async function renderChunks(chunks, signal, onChunkDone) {
-  const limit = Math.max(1, Math.min(3, Number(els.concurrency.value) || 1));
+  const limit = Math.max(1, Math.min(2, Number(els.concurrency.value) || 1));
   const parts = new Array(chunks.length);
   let cursor = 0;
+  let failure = null;
 
   async function worker() {
-    while (!signal?.aborted) {
+    while (!failure && !signal?.aborted) {
       const index = cursor;
       cursor += 1;
       if (index >= chunks.length) return;
-      const blob = await synthesizeChunk(chunks[index], signal);
-      parts[index] = blob;
-      onChunkDone(index, blob);
+      try {
+        const blob = await synthesizeChunk(chunks[index], signal);
+        parts[index] = blob;
+        onChunkDone(index, blob);
+      } catch (error) {
+        failure = error;
+        state.controller?.abort();
+        return;
+      }
     }
   }
 
   await Promise.all(Array.from({ length: Math.min(limit, chunks.length) }, worker));
+  if (failure) throw failure;
   return parts;
 }
 

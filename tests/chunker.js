@@ -28,3 +28,11 @@ test("chunker hard-splits a very long sentence", async () => {
   assert.equal(chunks.length, 3);
   assert.ok(chunks.every((chunk) => chunk.length <= 400));
 });
+
+test("chunker prefers whitespace when splitting long sentences", async () => {
+  const { splitIntoChunks } = await loadChunker();
+  const chunks = splitIntoChunks(`${"word ".repeat(120)}done`, 400);
+  assert.ok(chunks.length > 1);
+  assert.ok(chunks.every((chunk) => chunk.length <= 400));
+  assert.ok(chunks.every((chunk) => !chunk.includes("wo rd")));
+});

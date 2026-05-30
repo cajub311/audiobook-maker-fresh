@@ -20,10 +20,16 @@ export function splitIntoChunks(text, maxChars = 1800) {
 
       if (sentence.length > limit) {
         pushCurrent();
-        for (let index = 0; index < sentence.length; index += limit) {
-          const piece = sentence.slice(index, index + limit).trim();
+        let remaining = sentence;
+        while (remaining.length > limit) {
+          const window = remaining.slice(0, limit + 1);
+          const splitAt = Math.max(window.lastIndexOf(" "), window.lastIndexOf("\t"));
+          const end = splitAt > Math.floor(limit * 0.6) && splitAt <= limit ? splitAt : limit;
+          const piece = remaining.slice(0, end).trim();
           if (piece) chunks.push(piece);
+          remaining = remaining.slice(end).trim();
         }
+        if (remaining) chunks.push(remaining);
         continue;
       }
 
