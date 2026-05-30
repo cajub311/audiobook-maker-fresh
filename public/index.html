@@ -38,8 +38,34 @@
           <label for="pitch">Pitch <span id="pitchValue">0 Hz</span></label>
           <input id="pitch" type="range" min="-30" max="30" value="0" />
 
+          <label for="style">Narration style</label>
+          <select id="style">
+            <option value="neutral">Neutral</option>
+            <option value="warm">Warm</option>
+            <option value="storyteller" selected>Storyteller</option>
+            <option value="dramatic">Dramatic</option>
+            <option value="bright">Bright</option>
+            <option value="calm">Calm</option>
+          </select>
+
+          <label for="expressiveness">Expressiveness <span id="expressivenessValue">55%</span></label>
+          <input id="expressiveness" type="range" min="0" max="100" value="55" />
+
           <label for="chunkSize">Chunk size</label>
           <input id="chunkSize" type="number" min="400" max="4500" step="100" value="1800" />
+
+          <label for="format">MP3 quality</label>
+          <select id="format">
+            <option value="mp3">Standard</option>
+            <option value="mp3-high">Higher quality</option>
+          </select>
+
+          <label for="concurrency">Render mode</label>
+          <select id="concurrency">
+            <option value="1">Steady (1 at a time)</option>
+            <option value="2" selected>Fast (2 at a time)</option>
+            <option value="3">Faster (3 at a time)</option>
+          </select>
 
           <button id="preview" class="secondary">Preview first chunk</button>
           <button id="generate" class="primary">Generate audiobook</button>
@@ -48,6 +74,11 @@
           <div class="progress">
             <div id="bar"></div>
           </div>
+          <dl class="run-stats">
+            <div><dt>Elapsed</dt><dd id="elapsed">0s</dd></div>
+            <div><dt>Generated</dt><dd id="generatedSize">0 KB</dd></div>
+            <div><dt>Settings</dt><dd id="settingsSummary">Storyteller</dd></div>
+          </dl>
           <p id="message" class="message">Ready.</p>
         </aside>
       </section>

@@ -7,7 +7,7 @@ const { test } = require("node:test");
 process.env.ABM_FAKE_TTS = "1";
 
 const { server } = require("../scripts/dev-server");
-const { clampNumber, toProsodyPercent } = require("../api/tts");
+const { clampNumber, resolveNarrationSettings, toProsodyPercent } = require("../api/tts");
 
 function listen() {
   return new Promise((resolve) => {
@@ -44,6 +44,17 @@ test("numeric helpers clamp safely", () => {
   assert.equal(toProsodyPercent(-0.2), "-20%");
 });
 
+test("narration settings apply style presets and clamp values", () => {
+  const dramatic = resolveNarrationSettings({ rate: 0.48, pitch: 49, style: "dramatic", expressiveness: 1 });
+  assert.equal(dramatic.style, "dramatic");
+  assert.ok(Math.abs(dramatic.rate - 0.4) < 0.0001);
+  assert.equal(dramatic.pitch, 50);
+
+  const fallback = resolveNarrationSettings({ style: "unknown", expressiveness: 2 });
+  assert.equal(fallback.style, "neutral");
+  assert.equal(fallback.expressiveness, 1);
+});
+
 test("server exposes health, voices, static app, and fake tts", async () => {
   const base = await listen();
   try {
@@ -71,7 +82,32 @@ test("server exposes health, voices, static app, and fake tts", async () => {
     );
     assert.equal(tts.statusCode, 200);
     assert.equal(tts.headers["content-type"], "audio/mpeg");
+    assert.equal(tts.headers["x-narration-style"], "neutral");
     assert.ok(tts.body.length > 20);
+  } finally {
+    await close();
+  }
+});
+
+test("tts rejects bad methods, bad json, and oversized chunks", async () => {
+  const base = await listen();
+  try {
+    const get = await request(`${base}/api/tts`);
+    assert.equal(get.statusCode, 405);
+
+    const badJson = await request(
+      `${base}/api/tts`,
+      { method: "POST", headers: { "Content-Type": "application/json" } },
+      "{"
+    );
+    assert.equal(badJson.statusCode, 400);
+
+    const oversized = await request(
+      `${base}/api/tts`,
+      { method: "POST", headers: { "Content-Type": "application/json" } },
+      JSON.stringify({ text: "x".repeat(4501) })
+    );
+    assert.equal(oversized.statusCode, 413);
   } finally {
     await close();
   }

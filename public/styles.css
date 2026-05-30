@@ -193,6 +193,35 @@ button:disabled {
   transition: width 180ms ease;
 }
 
+.run-stats {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+
+.run-stats div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(41, 49, 61, 0.72);
+  padding-bottom: 8px;
+}
+
+.run-stats dt,
+.run-stats dd {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.run-stats dt {
+  color: var(--muted);
+}
+
+.run-stats dd {
+  color: var(--text);
+  text-align: right;
+}
+
 .message {
   min-height: 44px;
   color: var(--muted);

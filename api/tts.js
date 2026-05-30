@@ -4,6 +4,14 @@ const { DEFAULT_VOICE, isValidVoice } = require("./voices");
 
 const MAX_CHARS = 4500;
 const FAKE_MP3 = Buffer.from("ID3\u0004\u0000\u0000\u0000\u0000\u0000\u000fAudiobook Maker test audio\n", "binary");
+const STYLE_PRESETS = {
+  neutral: { label: "Neutral", rate: 0, pitch: 0 },
+  warm: { label: "Warm", rate: -0.03, pitch: -2 },
+  storyteller: { label: "Storyteller", rate: -0.06, pitch: 1 },
+  dramatic: { label: "Dramatic", rate: -0.08, pitch: 4 },
+  bright: { label: "Bright", rate: 0.04, pitch: 5 },
+  calm: { label: "Calm", rate: -0.1, pitch: -5 }
+};
 
 function clampNumber(value, min, max, fallback = 0) {
   const number = Number(value);
@@ -50,6 +58,23 @@ function toProsodyPercent(rate) {
   return pct >= 0 ? `+${pct}%` : `${pct}%`;
 }
 
+function normalizeStyle(style) {
+  const key = String(style || "neutral").toLowerCase();
+  return STYLE_PRESETS[key] ? key : "neutral";
+}
+
+function resolveNarrationSettings({ rate = 0, pitch = 0, style = "neutral", expressiveness = 0.5 } = {}) {
+  const styleKey = normalizeStyle(style);
+  const preset = STYLE_PRESETS[styleKey];
+  const intensity = clampNumber(expressiveness, 0, 1, 0.5);
+  return {
+    style: styleKey,
+    expressiveness: intensity,
+    rate: clampNumber(Number(rate) + preset.rate * intensity, -0.5, 0.5),
+    pitch: clampNumber(Number(pitch) + preset.pitch * intensity, -50, 50)
+  };
+}
+
 function outputFormat(formatName) {
   const { OUTPUT_FORMAT } = require("msedge-tts");
   return formatName === "mp3-high"
@@ -66,10 +91,7 @@ async function synthesize({ text, voice, rate, pitch, format }) {
   const tts = new MsEdgeTTS();
   await tts.setMetadata(voice, outputFormat(format));
 
-  const prosody = {
-    rate: toProsodyPercent(rate),
-    pitch: `${Math.round(clampNumber(pitch, -50, 50))}Hz`
-  };
+  const prosody = { rate: toProsodyPercent(rate), pitch: `${Math.round(clampNumber(pitch, -50, 50))}Hz` };
   const { audioStream } = await tts.toStream(text, prosody);
 
   return await new Promise((resolve, reject) => {
@@ -127,12 +149,16 @@ async function handleTts(req, res) {
   }
 
   const voice = isValidVoice(body.voice) ? String(body.voice) : DEFAULT_VOICE;
-  const rate = clampNumber(body.rate, -0.5, 0.5);
-  const pitch = clampNumber(body.pitch, -50, 50);
+  const narration = resolveNarrationSettings({
+    rate: body.rate,
+    pitch: body.pitch,
+    style: body.style,
+    expressiveness: body.expressiveness
+  });
   const format = String(body.format || "mp3").toLowerCase();
 
   try {
-    const buffer = await synthesize({ text, voice, rate, pitch, format });
+    const buffer = await synthesize({ text, voice, rate: narration.rate, pitch: narration.pitch, format });
     if (!buffer || buffer.length === 0) {
       json(res, 502, { error: "TTS returned empty audio." });
       return;
@@ -141,7 +167,9 @@ async function handleTts(req, res) {
       "Content-Type": "audio/mpeg",
       "Content-Length": String(buffer.length),
       "Cache-Control": "no-store",
-      "X-Voice": voice
+      "X-Voice": voice,
+      "X-Narration-Style": narration.style,
+      "X-Expressiveness": String(narration.expressiveness)
     });
     res.end(buffer);
   } catch (error) {
@@ -155,3 +183,5 @@ module.exports.clampNumber = clampNumber;
 module.exports.handleTts = handleTts;
 module.exports.synthesize = synthesize;
 module.exports.toProsodyPercent = toProsodyPercent;
+module.exports.resolveNarrationSettings = resolveNarrationSettings;
+module.exports.STYLE_PRESETS = STYLE_PRESETS;
